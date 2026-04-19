@@ -69,7 +69,7 @@ export default function App(){
     library:<BriefLibrary allBriefs={allBriefs} library={library} onSave={saveBrief} isMobile={isMobile}/>,
     tracker:<MyTracker library={library} onUpdateStatus={updateStatus} onRemove={removeBrief} isMobile={isMobile}/>,
     trends:<TrendCalendar/>,
-    keywords:<KeywordVault/>,
+    keywords:<KeywordVault isAdmin={isAdmin}/>,
     revenue:<RevenueTracker/>,
     performance:<ProductPerformance/>,
     styleboard:<StyleBoard/>,

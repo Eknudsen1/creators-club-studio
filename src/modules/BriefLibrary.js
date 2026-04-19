@@ -9,7 +9,7 @@ function BriefCard({brief,isSaved,onSave,isMobile}){
       {/* Example image — always visible if present */}
       {brief.exampleImage&&(
         <div style={{borderRadius:12,overflow:"hidden",margin:"-20px -20px 0 -20px"}}>
-          <img src={brief.exampleImage} alt={brief.title} style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/>
+          <img src={brief.exampleImage} alt={brief.title} style={{width:"100%",height:240,objectFit:"cover",display:"block"}}/>
         </div>
       )}
 
