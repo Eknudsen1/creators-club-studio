@@ -1,28 +1,30 @@
-import {useState} from 'react';
+import {useState,useRef} from 'react';
 import {C,FONT,SCRIPT,ART_STYLES} from './data';
 import {Card,SLabel,Btn,Input,Textarea} from './ui';
 
-const EMPTY={title:"",week:"",theme:"",style:"Loose Watercolor",palette:["#F9C6C6","#B8D8BA","#F7E4BE","#C5D8E8","#EDD9F0"],paletteNames:["","","","",""],moodWordsRaw:"",elementsRaw:"",sellerTip:""};
+const EMPTY={title:"",week:"",theme:"",style:"Loose Watercolor",palette:["#F9C6C6","#B8D8BA","#F7E4BE","#C5D8E8","#EDD9F0"],paletteNames:["","","","",""],moodWordsRaw:"",elementsRaw:"",sellerTip:"",exampleImage:""};
 
 export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
   const [form,setForm]=useState(EMPTY);
   const [editId,setEditId]=useState(null);
   const [saved,setSaved]=useState(false);
   const [tab,setTab]=useState("add");
+  const imgRef=useRef();
   const setF=(k,v)=>setForm(f=>({...f,[k]:v}));
   const setPalette=(i,v)=>setForm(f=>{const p=[...f.palette];p[i]=v;return{...f,palette:p};});
   const setPName=(i,v)=>setForm(f=>{const p=[...f.paletteNames];p[i]=v;return{...f,paletteNames:p};});
+  const handleImage=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>setF("exampleImage",ev.target.result);r.readAsDataURL(file);e.target.value="";};
 
   const save=()=>{
     const moodWords=form.moodWordsRaw.split(",").map(s=>s.trim()).filter(Boolean);
     const elements=form.elementsRaw.split("\n").map(s=>s.trim()).filter(Boolean);
     if(!form.title||!form.week||!form.theme||!elements.length)return;
-    const brief={id:editId||`brief-${Date.now()}`,title:form.title,week:form.week,theme:form.theme,style:form.style,palette:form.palette,paletteNames:form.paletteNames,moodWords,elements,sellerTip:form.sellerTip,createdAt:editId?(sharedBriefs.find(b=>b.id===editId)?.createdAt||Date.now()):Date.now()};
+    const brief={id:editId||`brief-${Date.now()}`,title:form.title,week:form.week,theme:form.theme,style:form.style,palette:form.palette,paletteNames:form.paletteNames,moodWords,elements,sellerTip:form.sellerTip,exampleImage:form.exampleImage,createdAt:editId?(sharedBriefs.find(b=>b.id===editId)?.createdAt||Date.now()):Date.now()};
     setSharedBriefs(bs=>editId?bs.map(b=>b.id===editId?brief:b):[...bs,brief]);
     setForm(EMPTY);setEditId(null);setSaved(true);setTimeout(()=>setSaved(false),2000);setTab("manage");
   };
 
-  const startEdit=b=>{setForm({title:b.title,week:b.week,theme:b.theme,style:b.style,palette:b.palette,paletteNames:b.paletteNames,moodWordsRaw:b.moodWords.join(", "),elementsRaw:b.elements.join("\n"),sellerTip:b.sellerTip});setEditId(b.id);setTab("add");};
+  const startEdit=b=>{setForm({title:b.title,week:b.week,theme:b.theme,style:b.style,palette:b.palette,paletteNames:b.paletteNames,moodWordsRaw:b.moodWords.join(", "),elementsRaw:b.elements.join("\n"),sellerTip:b.sellerTip,exampleImage:b.exampleImage||""});setEditId(b.id);setTab("add");};
 
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
@@ -71,6 +73,22 @@ export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
               <div style={{fontSize:11,color:C.warm,marginTop:4}}>{form.elementsRaw.split("\n").filter(s=>s.trim()).length} elements</div>
             </div>
             <div><SLabel>Seller Tip</SLabel><Textarea value={form.sellerTip} onChange={e=>setF("sellerTip",e.target.value)} rows={2} placeholder="One actionable Etsy selling tip..."/></div>
+            <div>
+              <SLabel>Example Image (optional)</SLabel>
+              <input ref={imgRef} type="file" accept="image/*" onChange={handleImage} style={{display:"none"}}/>
+              {form.exampleImage?(
+                <div style={{position:"relative",borderRadius:12,overflow:"hidden",marginBottom:8}}>
+                  <img src={form.exampleImage} alt="Example" style={{width:"100%",maxHeight:200,objectFit:"cover",display:"block",borderRadius:12}}/>
+                  <button onClick={()=>setF("exampleImage","")} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,.55)",border:"none",color:"#fff",borderRadius:"50%",width:28,height:28,fontSize:14,cursor:"pointer"}}>×</button>
+                </div>
+              ):(
+                <div onClick={()=>imgRef.current?.click()} style={{border:`2px dashed ${C.mustard}50`,borderRadius:12,padding:24,textAlign:"center",cursor:"pointer",background:C.cream}}>
+                  <div style={{fontSize:24,marginBottom:6}}>🖼️</div>
+                  <div style={{fontSize:13,color:C.warm,fontWeight:600}}>Click to upload example image</div>
+                  <div style={{fontSize:11,color:C.warm+"80",marginTop:4}}>PNG, JPG — shown to members in the brief preview</div>
+                </div>
+              )}
+            </div>
             {saved&&<div style={{background:C.sage+"30",border:`1px solid ${C.sage}`,borderRadius:10,padding:12,color:"#4E7252",fontWeight:700,fontSize:13,textAlign:"center"}}>✓ Brief published!</div>}
             <div style={{display:"flex",gap:10}}>
               {editId&&<Btn variant="ghost" onClick={()=>{setForm(EMPTY);setEditId(null);}} style={{flex:1}}>Cancel</Btn>}
