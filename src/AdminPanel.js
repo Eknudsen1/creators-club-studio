@@ -1,8 +1,8 @@
 import {useState,useRef} from 'react';
-import {C,FONT,SCRIPT,ART_STYLES} from './data';
+import {C,FONT,SCRIPT} from './data';
 import {Card,SLabel,Btn,Input,Textarea} from './ui';
 
-const EMPTY={title:"",week:"",theme:"",style:"Loose Watercolor",palette:["#F9C6C6","#B8D8BA","#F7E4BE","#C5D8E8","#EDD9F0"],paletteNames:["","","","",""],moodWordsRaw:"",elementsRaw:"",sellerTip:"",exampleImage:""};
+const EMPTY={title:"",week:"",theme:"",style:"",palette:["#F9C6C6","#B8D8BA","#F7E4BE","#C5D8E8","#EDD9F0"],paletteNames:["","","","",""],moodWordsRaw:"",elementsRaw:"",sellerTip:"",exampleImage:""};
 
 export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
   const [form,setForm]=useState(EMPTY);
@@ -11,8 +11,13 @@ export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
   const [tab,setTab]=useState("add");
   const imgRef=useRef();
   const setF=(k,v)=>setForm(f=>({...f,[k]:v}));
+
   const setPalette=(i,v)=>setForm(f=>{const p=[...f.palette];p[i]=v;return{...f,palette:p};});
   const setPName=(i,v)=>setForm(f=>{const p=[...f.paletteNames];p[i]=v;return{...f,paletteNames:p};});
+
+  const addColor=()=>setForm(f=>({...f,palette:[...f.palette,"#FAF6F0"],paletteNames:[...f.paletteNames,""]}));
+  const removeColor=(i)=>setForm(f=>({...f,palette:f.palette.filter((_,idx)=>idx!==i),paletteNames:f.paletteNames.filter((_,idx)=>idx!==i)}));
+
   const handleImage=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>setF("exampleImage",ev.target.result);r.readAsDataURL(file);e.target.value="";};
 
   const save=()=>{
@@ -49,23 +54,30 @@ export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
               <div><SLabel>Theme</SLabel><Input value={form.theme} onChange={e=>setF("theme",e.target.value)} placeholder="e.g. Spring Florals"/></div>
-              <div><SLabel>Art Style</SLabel>
-                <select value={form.style} onChange={e=>setF("style",e.target.value)} style={{background:C.cream,border:`1.5px solid ${C.mustard}30`,borderRadius:10,padding:"10px 14px",fontSize:13,fontFamily:FONT,color:C.espresso,outline:"none",width:"100%"}}>
-                  {ART_STYLES.map(s=><option key={s}>{s}</option>)}
-                </select>
-              </div>
+              <div><SLabel>Art Style</SLabel><Input value={form.style} onChange={e=>setF("style",e.target.value)} placeholder="e.g. Loose Watercolor, Boho Line Art..."/></div>
             </div>
+
+            {/* Flexible palette */}
             <div>
-              <SLabel>Color Palette (5 colors)</SLabel>
-              <div style={{display:"flex",gap:8}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <SLabel style={{margin:0}}>Color Palette ({form.palette.length} colors)</SLabel>
+                <button onClick={addColor} style={{background:C.mustard,border:"none",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700,color:C.espresso,cursor:"pointer",fontFamily:FONT}}>+ Add Color</button>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {form.palette.map((col,i)=>(
-                  <div key={i} style={{flex:1,display:"flex",flexDirection:"column",gap:4}}>
-                    <input type="color" value={col} onChange={e=>setPalette(i,e.target.value)} style={{width:"100%",height:40,borderRadius:8,border:"none",cursor:"pointer",padding:2}}/>
-                    <input value={form.paletteNames[i]} onChange={e=>setPName(i,e.target.value)} placeholder="Name" style={{background:C.cream,border:`1px solid ${C.mustard}30`,borderRadius:6,padding:"4px 6px",fontSize:10,fontFamily:FONT,color:C.espresso,outline:"none",width:"100%",textAlign:"center"}}/>
+                  <div key={i} style={{display:"flex",flexDirection:"column",gap:4,alignItems:"center",minWidth:60}}>
+                    <div style={{position:"relative"}}>
+                      <input type="color" value={col} onChange={e=>setPalette(i,e.target.value)} style={{width:52,height:52,borderRadius:10,border:"none",cursor:"pointer",padding:2}}/>
+                      {form.palette.length>1&&(
+                        <button onClick={()=>removeColor(i)} style={{position:"absolute",top:-6,right:-6,background:"#DC2626",border:"none",color:"#fff",borderRadius:"50%",width:18,height:18,fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1}}>×</button>
+                      )}
+                    </div>
+                    <input value={form.paletteNames[i]} onChange={e=>setPName(i,e.target.value)} placeholder="Name" style={{background:C.cream,border:`1px solid ${C.mustard}30`,borderRadius:6,padding:"4px 6px",fontSize:10,fontFamily:FONT,color:C.espresso,outline:"none",width:60,textAlign:"center"}}/>
                   </div>
                 ))}
               </div>
             </div>
+
             <div><SLabel>Mood Words (comma-separated)</SLabel><Input value={form.moodWordsRaw} onChange={e=>setF("moodWordsRaw",e.target.value)} placeholder="Dreamy, Soft, Romantic, Fresh, Airy"/></div>
             <div>
               <SLabel>Elements — one per line</SLabel>
@@ -73,11 +85,13 @@ export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
               <div style={{fontSize:11,color:C.warm,marginTop:4}}>{form.elementsRaw.split("\n").filter(s=>s.trim()).length} elements</div>
             </div>
             <div><SLabel>Seller Tip</SLabel><Textarea value={form.sellerTip} onChange={e=>setF("sellerTip",e.target.value)} rows={2} placeholder="One actionable Etsy selling tip..."/></div>
+
+            {/* Image upload */}
             <div>
               <SLabel>Example Image (optional)</SLabel>
               <input ref={imgRef} type="file" accept="image/*" onChange={handleImage} style={{display:"none"}}/>
               {form.exampleImage?(
-                <div style={{position:"relative",borderRadius:12,overflow:"hidden",marginBottom:8}}>
+                <div style={{position:"relative",borderRadius:12,overflow:"hidden"}}>
                   <img src={form.exampleImage} alt="Example" style={{width:"100%",maxHeight:200,objectFit:"cover",display:"block",borderRadius:12}}/>
                   <button onClick={()=>setF("exampleImage","")} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,.55)",border:"none",color:"#fff",borderRadius:"50%",width:28,height:28,fontSize:14,cursor:"pointer"}}>×</button>
                 </div>
@@ -89,12 +103,14 @@ export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
                 </div>
               )}
             </div>
+
             {saved&&<div style={{background:C.sage+"30",border:`1px solid ${C.sage}`,borderRadius:10,padding:12,color:"#4E7252",fontWeight:700,fontSize:13,textAlign:"center"}}>✓ Brief published!</div>}
             <div style={{display:"flex",gap:10}}>
               {editId&&<Btn variant="ghost" onClick={()=>{setForm(EMPTY);setEditId(null);}} style={{flex:1}}>Cancel</Btn>}
               <Btn onClick={save} style={{flex:1}} disabled={!form.title||!form.week||!form.theme}>{editId?"Update":"Publish Brief"}</Btn>
             </div>
           </>}
+
           {tab==="manage"&&<>
             {!sharedBriefs.length&&<div style={{textAlign:"center",padding:32,color:C.warm}}><div style={{fontSize:28,marginBottom:8}}>◈</div><div style={{fontSize:13}}>No briefs yet.</div></div>}
             {[...sharedBriefs].sort((a,b)=>b.createdAt-a.createdAt).map(brief=>(
@@ -102,7 +118,7 @@ export default function AdminPanel({sharedBriefs,setSharedBriefs,onClose}){
                 <div style={{flex:1}}>
                   <div style={{fontSize:10,color:C.warm,fontWeight:700,letterSpacing:2,marginBottom:3}}>{brief.week}</div>
                   <div style={{fontSize:15,fontWeight:800,color:C.espresso,fontFamily:SCRIPT,marginBottom:6}}>{brief.title}</div>
-                  <div style={{display:"flex",gap:5}}>{brief.palette.map((col,i)=><div key={i} style={{width:16,height:16,borderRadius:"50%",background:col}}/>)}</div>
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{brief.palette.map((col,i)=><div key={i} style={{width:16,height:16,borderRadius:"50%",background:col}}/>)}</div>
                 </div>
                 <div style={{display:"flex",gap:8,flexShrink:0}}>
                   <Btn variant="ghost" onClick={()=>startEdit(brief)} style={{fontSize:12,padding:"6px 12px"}}>Edit</Btn>
