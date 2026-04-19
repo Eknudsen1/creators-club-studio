@@ -6,19 +6,27 @@ function BriefCard({brief,isSaved,onSave,isMobile}){
   const [open,setOpen]=useState(false);
   return(
     <Card style={{display:"flex",flexDirection:"column",gap:14}}>
+      {/* Example image — always visible if present */}
+      {brief.exampleImage&&(
+        <div style={{borderRadius:12,overflow:"hidden",margin:"-20px -20px 0 -20px"}}>
+          <img src={brief.exampleImage} alt={brief.title} style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/>
+        </div>
+      )}
+
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
         <div style={{flex:1}}>
           <div style={{fontSize:10,color:C.warm,fontWeight:700,letterSpacing:2,marginBottom:4}}>{brief.week}</div>
           <div style={{fontSize:isMobile?16:18,fontWeight:800,color:C.espresso,fontFamily:SCRIPT,lineHeight:1.2}}>{brief.title}</div>
           <div style={{display:"flex",gap:6,marginTop:7,flexWrap:"wrap"}}>
-            <span style={{background:C.lavender+"50",color:C.espresso,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:600}}>{brief.style}</span>
+            {brief.style&&<span style={{background:C.lavender+"50",color:C.espresso,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:600}}>{brief.style}</span>}
             <span style={{background:C.blush+"50",color:C.espresso,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:600}}>{brief.theme}</span>
           </div>
         </div>
-        <div style={{display:"flex",gap:4,flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end",maxWidth:110}}>
+        <div style={{display:"flex",gap:4,flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end",maxWidth:120}}>
           {brief.palette.map((col,i)=><div key={i} title={brief.paletteNames[i]} style={{width:20,height:20,borderRadius:"50%",background:col,boxShadow:"0 1px 4px rgba(0,0,0,.15)"}}/>)}
         </div>
       </div>
+
       {open&&(
         <div style={{display:"flex",flexDirection:"column",gap:12,animation:"fadeIn .3s ease"}}>
           <div>
@@ -37,6 +45,17 @@ function BriefCard({brief,isSaved,onSave,isMobile}){
               ))}
             </div>
           </div>
+          <div>
+            <SLabel>Color Palette</SLabel>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              {brief.palette.map((col,i)=>(
+                <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                  <div style={{width:32,height:32,borderRadius:8,background:col,boxShadow:"0 2px 6px rgba(0,0,0,.12)"}}/>
+                  <div style={{fontSize:9,color:C.warm,textAlign:"center",maxWidth:48,lineHeight:1.2}}>{brief.paletteNames[i]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
           {brief.sellerTip&&(
             <div style={{background:C.sage+"20",border:`1px solid ${C.sage}`,borderRadius:10,padding:12}}>
               <div style={{fontSize:10,color:C.sageDark,fontWeight:700,letterSpacing:2,marginBottom:4}}>SELLER TIP</div>
@@ -45,8 +64,9 @@ function BriefCard({brief,isSaved,onSave,isMobile}){
           )}
         </div>
       )}
+
       <div style={{display:"flex",gap:8,alignItems:"center"}}>
-        <Btn variant="ghost" onClick={()=>setOpen(o=>!o)} style={{fontSize:12,padding:"6px 14px"}}>{open?"▲ Less":"▼ Preview"}</Btn>
+        <Btn variant="ghost" onClick={()=>setOpen(o=>!o)} style={{fontSize:12,padding:"6px 14px"}}>{open?"▲ Less":"▼ More Details"}</Btn>
         <div style={{flex:1}}/>
         {isSaved
           ?<span style={{background:C.sage+"30",color:C.sageDark,borderRadius:20,padding:"5px 12px",fontSize:12,fontWeight:700}}>✓ Saved</span>
@@ -57,7 +77,7 @@ function BriefCard({brief,isSaved,onSave,isMobile}){
 }
 
 export default function BriefLibrary({allBriefs,library,onSave,isMobile}){
-  const styles=["All",...new Set(allBriefs.map(b=>b.style))];
+  const styles=["All",...new Set(allBriefs.map(b=>b.style).filter(Boolean))];
   const [filter,setFilter]=useState("All");
   const filtered=filter==="All"?allBriefs:allBriefs.filter(b=>b.style===filter);
   const savedIds=new Set(library.map(b=>b.id));
