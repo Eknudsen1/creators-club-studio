@@ -68,7 +68,7 @@ export default function App(){
   const PAGE_MAP={
     library:<BriefLibrary allBriefs={allBriefs} library={library} onSave={saveBrief} isMobile={isMobile}/>,
     tracker:<MyTracker library={library} onUpdateStatus={updateStatus} onRemove={removeBrief} isMobile={isMobile}/>,
-    trends:<TrendCalendar/>,
+    trends:<TrendCalendar isAdmin={isAdmin}/>,
     keywords:<KeywordVault isAdmin={isAdmin}/>,
     revenue:<RevenueTracker/>,
     performance:<ProductPerformance/>,
